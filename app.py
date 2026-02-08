@@ -37,11 +37,18 @@ if not st.session_state.auth:
                 st.error("Доступ запрещен")
 else:
     # --- МЕНЮ ---
-    menu = st.sidebar.radio("Навигация", ["📊 Дашборд", "📦 Склад", "➕ Приемка", "💰 Оформить продажу", "📜 История продаж"])
-    
-    if st.sidebar.button("Выйти"):
-        st.session_state.auth = False
-        st.rerun()
+   # Было:
+# menu = st.sidebar.radio("Меню", ["Склад", "Продажа"])
+
+# Сделай так:
+menu = st.sidebar.radio("Разделы приложения", ["📦 Склад и Учет", "🎮 Игра Tycoon"])
+
+if menu == "📦 Склад и Учет":
+    # Тут весь твой старый код склада (приемка, таблицы и т.д.)
+    st.write("Ваш основной функционал") 
+
+elif menu == "🎮 Игра Tycoon":
+    run_apple_tycoon() # Просто вызываем функцию, которую вставили в конце
 
     # --- ВКЛАДКА: ДАШБОРД ---
     if menu == "📊 Дашборд":
@@ -127,7 +134,78 @@ else:
         if not df_sold.empty:
             # Считаем прибыль для каждой строки для наглядности
             df_sold['Прибыль'] = (df_sold['sell_price'] + df_sold['acc_price']) - df_sold['buy_price']
-            st.dataframe(df_sold, use_container_width=True)
-            st.info(f"Всего заработано чистыми: {df_sold['Прибыль'].sum():,.0f} ₽")
-        else:
-            st.write("Продаж пока не было.")
+
+          import random
+
+def run_apple_tycoon():
+    st.title("🎮 Pro Apple Tycoon")
+    st.sidebar.markdown("---")
+    st.sidebar.info("Цель: Стать Техно-Магнатом, накопив 50 млн ₽")
+
+    # Инициализация игровых данных в памяти браузера
+    if 'game_money' not in st.session_state:
+        st.session_state.game_money = 500000
+        st.session_state.game_rep = 50
+        st.session_state.game_log = ["🚀 Вы вышли на охоту за айфонами!"]
+
+    # Логика рангов
+    money = st.session_state.game_money
+    if money < 1000000:
+        rank, next_r, color = "📦 Перекуп с Авито", 1000000, "gray"
+    elif money < 5000000:
+        rank, next_r, color = "🏪 Хозяин точки", 5000000, "blue"
+    elif money < 15000000:
+        rank, next_r, color = "🏢 Владелец офиса", 15000000, "green"
+    else:
+        rank, next_r, color = "👑 Техно-Магнат", None, "red"
+
+    # Отображение прогресса
+    st.subheader(f"Ваш ранг: :{color}[{rank}]")
+    if next_r:
+        st.progress(min(money / next_r, 1.0))
+        st.caption(f"До следующего уровня осталось: {next_r - money:,.0f} ₽")
+
+    # Панель приборов
+    stat1, stat2 = st.columns(2)
+    stat1.metric("Ваш Капитал", f"{money:,.0f} ₽")
+    stat2.metric("Репутация", f"{st.session_state.game_rep}%")
+
+    st.write("### Управление бизнесом")
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        if st.button("📱 Сделка дня"):
+            chance = 0.4 + (st.session_state.game_rep / 200)
+            if random.random() < chance:
+                profit = random.randint(40000, 150000)
+                st.session_state.game_money += profit
+                st.session_state.game_log.insert(0, f"✅ Продали iPhone 15 Pro! +{profit:,.0f} ₽")
+            else:
+                loss = random.randint(30000, 80000)
+                st.session_state.game_money -= loss
+                st.session_state.game_rep -= 5
+                st.session_state.game_log.insert(0, f"❌ Клиент вернул товар! -{loss:,.0f} ₽")
+            st.rerun()
+
+    with c2:
+        if st.button("📢 Реклама (50к)"):
+            if st.session_state.game_money >= 50000:
+                st.session_state.game_money -= 50000
+                st.session_state.game_rep = min(st.session_state.game_rep + 10, 100)
+                st.session_state.game_log.insert(0, "📢 Запустили рекламу в Instagram! Репутация +10")
+                st.rerun()
+            else:
+                st.error("Нет денег!")
+
+    with c3:
+        if st.button("🔄 Сброс"):
+            st.session_state.game_money = 500000
+            st.session_state.game_rep = 50
+            st.session_state.game_log = ["Игра началась заново."]
+            st.rerun()
+
+    st.write("---")
+    st.write("**События:**")
+    for msg in st.session_state.game_log[:3]:
+        st.write(f"• {msg}")
+      
